@@ -1,0 +1,270 @@
+# Sample GraphQL Mutations for Testing Opportunity Detection
+# Use these in GraphQL Playground at http://localhost:8000/graphql
+
+# ============================================================================
+# Test Case 1: Real Estate + Employment Law
+# Expected: 2 opportunities (Real Estate ~85%, Employment Law ~75%)
+# ============================================================================
+
+mutation TestRealEstateEmployment {
+  createCommunication(input: {
+    content: "We're opening a new Chicago office next month and need help with the commercial lease. The space is about 5,000 square feet in the Loop. Also planning to hire 20 employees for this location and need to review our employment contracts."
+    clientName: "Acme Corp"
+    sourceType: EMAIL
+  }) {
+    communication {
+      id
+      clientName
+      sourceType
+      createdAt
+    }
+    opportunities {
+      id
+      title
+      opportunityType
+      confidence
+      description
+      estimatedValue
+      extractedText
+      status
+    }
+  }
+}
+
+# ============================================================================
+# Test Case 2: M&A + IP
+# Expected: 2-3 opportunities (M&A ~90%, IP ~70%, Employment ~65%)
+# ============================================================================
+
+mutation TestMergersAndAcquisitions {
+  createCommunication(input: {
+    content: "We're in discussions to acquire a smaller competitor, DataFlow Systems. The deal is valued at approximately $2.5M. We need assistance with due diligence, contract review, and ensuring all IP transfers properly. The target company has 15 employees that will be retained. Timeline is tight - we're hoping to close in 6 weeks. Also need trademark registration for our new product line launching Q3."
+    clientName: "TechStart Inc"
+    sourceType: MEETING
+  }) {
+    communication {
+      id
+      clientName
+      sourceType
+      createdAt
+    }
+    opportunities {
+      id
+      title
+      opportunityType
+      confidence
+      description
+      estimatedValue
+      extractedText
+      status
+    }
+  }
+}
+
+# ============================================================================
+# Test Case 3: Litigation + Employment Law
+# Expected: 2 opportunities (Litigation ~95%, IP Litigation ~85%)
+# ============================================================================
+
+mutation TestLitigation {
+  createCommunication(input: {
+    content: "Urgent: We've been served with a lawsuit from a former employee claiming wrongful termination and discrimination. The complaint was filed yesterday in federal court. We need litigation counsel immediately. The plaintiff is seeking $500K in damages. Additionally, we're dealing with a patent infringement claim from a competitor regarding our manufacturing process. Need IP litigation support as well."
+    clientName: "Global Manufacturing Ltd"
+    sourceType: EMAIL
+  }) {
+    communication {
+      id
+      clientName
+      sourceType
+      createdAt
+    }
+    opportunities {
+      id
+      title
+      opportunityType
+      confidence
+      description
+      estimatedValue
+      extractedText
+      status
+    }
+  }
+}
+
+# ============================================================================
+# Test Case 4: IP Focus
+# Expected: 2 opportunities (IP/Trademark ~80%, IP/Patent ~75%)
+# ============================================================================
+
+mutation TestIntellectualProperty {
+  createCommunication(input: {
+    content: "We're launching three new software products in Q2 and need to protect our intellectual property. Need trademark registration for all three brand names, plus we have a unique algorithm that we believe is patentable. Also concerned about copyright protection for our source code and documentation. Budget is around $50K for IP protection."
+    clientName: "InnovateTech Solutions"
+    sourceType: NOTE
+  }) {
+    communication {
+      id
+      clientName
+      sourceType
+      createdAt
+    }
+    opportunities {
+      id
+      title
+      opportunityType
+      confidence
+      description
+      estimatedValue
+      extractedText
+      status
+    }
+  }
+}
+
+# ============================================================================
+# Test Case 5: Complex Multi-Opportunity
+# Expected: 3-4 opportunities across multiple practice areas
+# ============================================================================
+
+mutation TestComplexScenario {
+  createCommunication(input: {
+    content: "Big changes coming for our company. First, we're acquiring two smaller competitors over the next 6 months for a combined $5M. Second, we're expanding to three new states which means new office leases and hiring 50+ people. Third, we have ongoing trademark disputes with a competitor that might escalate to litigation. Finally, we need to ensure all the acquired IP is properly transferred and protected. This is urgent - board wants everything done by Q3."
+    clientName: "MegaCorp Industries"
+    sourceType: EMAIL
+  }) {
+    communication {
+      id
+      clientName
+      sourceType
+      createdAt
+    }
+    opportunities {
+      id
+      title
+      opportunityType
+      confidence
+      description
+      estimatedValue
+      extractedText
+      status
+    }
+  }
+}
+
+# ============================================================================
+# Test Case 6: Edge Case - Minimum Length (50 chars)
+# Expected: Should succeed with at least 1 opportunity
+# ============================================================================
+
+mutation TestMinimumLength {
+  createCommunication(input: {
+    content: "Need help with commercial lease for new office space."
+    clientName: "Small Business LLC"
+    sourceType: NOTE
+  }) {
+    communication {
+      id
+      clientName
+      sourceType
+    }
+    opportunities {
+      id
+      title
+      confidence
+    }
+  }
+}
+
+# ============================================================================
+# Test Case 7: Edge Case - Too Short (should fail validation)
+# Expected: Error - "Content must be at least 50 characters long"
+# ============================================================================
+
+mutation TestTooShort {
+  createCommunication(input: {
+    content: "Need legal help"
+    clientName: "Test Client"
+    sourceType: EMAIL
+  }) {
+    communication {
+      id
+    }
+    opportunities {
+      id
+    }
+  }
+}
+
+# ============================================================================
+# Test Case 8: Low Confidence (vague request)
+# Expected: 0-1 opportunities with lower confidence
+# ============================================================================
+
+mutation TestLowConfidence {
+  createCommunication(input: {
+    content: "Hi, we might need some legal services in the future. Not sure exactly what yet, but probably something related to business operations. We're a growing company and want to be prepared. Let us know what you offer and we'll think about it."
+    clientName: "Vague Client Corp"
+    sourceType: EMAIL
+  }) {
+    communication {
+      id
+      clientName
+    }
+    opportunities {
+      id
+      title
+      confidence
+      opportunityType
+    }
+  }
+}
+
+# ============================================================================
+# Test Case 9: Employment Law Focus
+# Expected: 2-3 opportunities (hiring, termination, contracts)
+# ============================================================================
+
+mutation TestEmploymentLaw {
+  createCommunication(input: {
+    content: "We're restructuring our HR department and need comprehensive legal support. Planning to hire 30 new employees this quarter, need updated employment contracts and employee handbook. Also dealing with two potential wrongful termination claims from last month's layoffs. Want to ensure we're fully compliant with state and federal employment laws going forward."
+    clientName: "HR Solutions Inc"
+    sourceType: MEETING
+  }) {
+    communication {
+      id
+      clientName
+    }
+    opportunities {
+      id
+      title
+      opportunityType
+      confidence
+      description
+    }
+  }
+}
+
+# ============================================================================
+# Test Case 10: Real Estate Focus
+# Expected: 2-3 opportunities (lease, purchase, zoning)
+# ============================================================================
+
+mutation TestRealEstate {
+  createCommunication(input: {
+    content: "Expanding our retail footprint significantly. Need legal help with three new commercial leases in downtown locations, total space about 15,000 sq ft. Also looking to purchase a warehouse property for $1.2M, need due diligence and closing support. One of our new locations has potential zoning issues we need to resolve with the city."
+    clientName: "Retail Expansion Co"
+    sourceType: EMAIL
+  }) {
+    communication {
+      id
+      clientName
+    }
+    opportunities {
+      id
+      title
+      opportunityType
+      confidence
+      estimatedValue
+    }
+  }
+}
