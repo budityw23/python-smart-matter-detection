@@ -68,6 +68,21 @@ class Mutation:
                     f"Successfully created communication {communication.id} with {len(opportunities)} opportunities"
                 )
 
+                # Send WebSocket notifications for high-confidence opportunities
+                websocket_manager = info.context.get("websocket_manager")
+                if websocket_manager:
+                    for opp in opportunities:
+                        notification_msg = opp_service.create_notification_message(
+                            opp,
+                            input.client_name
+                        )
+                        if notification_msg:
+                            await websocket_manager.broadcast(notification_msg)
+                            logger.info(
+                                f"Sent notification for opportunity {opp.id} "
+                                f"(confidence: {opp.confidence}%)"
+                            )
+
                 # Convert DB models to GraphQL types
                 gql_communication = GQLCommunication(
                     id=str(communication.id),

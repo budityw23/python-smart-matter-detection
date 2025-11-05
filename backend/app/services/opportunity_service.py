@@ -1,11 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import List
+from typing import List, Optional
 import logging
 
 from app.models.communication import Communication, CommunicationType
 from app.models.opportunity import Opportunity, OpportunityType
 from app.services.ai_service import OpportunityDetector
+from app.protobuf.helpers import create_opportunity_notification
 
 logger = logging.getLogger(__name__)
 
@@ -90,3 +91,23 @@ class OpportunityService:
         """Determine if opportunity should trigger notification"""
         # Notify if confidence >= 70%
         return opportunity.confidence >= 70
+
+    def create_notification_message(
+        self,
+        opportunity: Opportunity,
+        client_name: str
+    ) -> Optional[bytes]:
+        """
+        Create protobuf notification message for an opportunity.
+
+        Args:
+            opportunity: Opportunity instance
+            client_name: Name of the client
+
+        Returns:
+            Serialized protobuf message bytes if should notify, None otherwise
+        """
+        if not self.should_notify(opportunity):
+            return None
+
+        return create_opportunity_notification(opportunity, client_name)

@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package nexl.opportunities;
+
+// Opportunity notification message
+message OpportunityNotification {
+  string opportunity_id = 1;
+  string title = 2;
+  OpportunityType type = 3;
+  float confidence = 4;
+  string client_name = 5;
+  int64 timestamp = 6;
+  string description = 7;
+}
+
+enum OpportunityType {
+  UNKNOWN = 0;
+  REAL_ESTATE = 1;
+  EMPLOYMENT_LAW = 2;
+  MERGERS_AND_ACQUISITIONS = 3;
+  INTELLECTUAL_PROPERTY = 4;
+  LITIGATION = 5;
+}
+
+// Analysis request message
+message AnalysisRequest {
+  string communication_id = 1;
+  string content = 2;
+  string client_name = 3;
+}
+
+// Analysis response message
+message AnalysisResponse {
+  string communication_id = 1;
+  repeated ExtractedOpportunity opportunities = 2;
+  bool success = 3;
+  string error_message = 4;
+}
+
+message ExtractedOpportunity {
+  string title = 1;
+  string description = 2;
+  OpportunityType type = 3;
+  float confidence = 4;
+  string extracted_text = 5;
+  string estimated_value = 6;
+}

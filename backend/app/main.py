@@ -1,24 +1,31 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from strawberry.fastapi import GraphQLRouter
 from contextlib import asynccontextmanager
+import logging
 
 from app.api.graphql.schema import schema
 from app.utils.database import get_db
+from app.websocket.manager import manager as websocket_manager
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
-    # Startup
-    print("Starting up...")
+    logger.info("🚀 Starting up Smart Matter Opportunity Detector...")
     yield
-    # Shutdown
-    print("Shutting down...")
+    logger.info("👋 Shutting down...")
 
 
 app = FastAPI(
@@ -37,13 +44,16 @@ app.add_middleware(
 )
 
 
-# GraphQL endpoint
+# GraphQL endpoint with WebSocket manager in context
 async def get_context():
     """Provide context to GraphQL resolvers"""
     db_gen = get_db()
     db = await anext(db_gen)
     try:
-        return {"db": db}
+        return {
+            "db": db,
+            "websocket_manager": websocket_manager
+        }
     finally:
         try:
             await anext(db_gen)
@@ -59,15 +69,44 @@ graphql_app = GraphQLRouter(
 app.include_router(graphql_app, prefix="/graphql")
 
 
+# WebSocket endpoint
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time notifications"""
+    await websocket_manager.connect(websocket)
+
+    try:
+        while True:
+            # Keep connection alive and handle incoming messages
+            data = await websocket.receive_text()
+            logger.debug(f"Received from client: {data}")
+
+            # Send ping/pong to keep connection alive
+            if data == "ping":
+                await websocket.send_text("pong")
+
+    except WebSocketDisconnect:
+        websocket_manager.disconnect(websocket)
+        logger.info("Client disconnected from WebSocket")
+
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        websocket_manager.disconnect(websocket)
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "service": "smart-matter-detector"
+        "service": "smart-matter-detector",
+        "websocket_connections": len(websocket_manager.active_connections)
     }
 
 
 @app.get("/")
 async def root():
-    return {"message": "Smart Matter Opportunity Detector API"}
+    return {
+        "message": "Smart Matter Opportunity Detector API",
+        "version": "1.0.0"
+    }
